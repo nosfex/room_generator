@@ -1,7 +1,7 @@
-use rand;
+
 use rand::prelude::*;
+use crate::room::Room;
 use std::fmt;
-use room::Room;
 pub struct Level {
     width: i32,
     height: i32,
@@ -14,7 +14,7 @@ impl Level {
         let mut board = Vec::new();
         for _ in 0..height {
             let row = vec![0; width as usize];
-            board .push(row);
+            board.push(row);
         }
         Level {
             width, height, board, rooms: Vec::new()
@@ -22,7 +22,55 @@ impl Level {
     }
 
     pub fn place_rooms(&mut self, rng: &mut StdRng) {
-        
+        let mut rng = rand::thread_rng();
+
+        let max_rooms = 10;
+        let min_room_width = 4;
+        let max_room_width = 8;
+        let min_room_height = 5;
+        let max_room_height = 12;
+
+        for _ in 0..max_rooms {
+            let mut x = rng.gen_range(0, self.width);
+            let mut y = rng.gen_range(0, self.height);
+
+            let width = rng.gen_range(min_room_width, max_room_width);
+            let height = rng.gen_range(min_room_height, max_room_height);
+
+            if x + width > self.width {
+                x = self.width - width;
+            }
+
+            if y + height > self.height {
+                y = self.height - height;
+            }
+
+            let mut collides = false;
+            let room = Room::new(x, y , width, height);
+
+            for other_room in &self.rooms {
+                if room.intersects(&other_room) {
+                    collides = true;
+                    break;
+                }
+            }
+
+            if !collides {
+                self.add_room(&room);
+            }
+        }
+    }
+
+    fn add_room(&mut self, room: &Room) {
+        for row in 0..room.height {
+            for col in 0..room.width {
+                let y = (room.y + row) as usize;
+                let x = (room.x + col) as usize;
+
+                self.board[y][x] = 1;
+            }
+        }
+        self.rooms.push(*room);
     }
 }
 

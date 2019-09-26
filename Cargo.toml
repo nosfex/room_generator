@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 rand = "0.7.2"
+sha2 = "0.7.1"
+arrayref = "0.3.4"
