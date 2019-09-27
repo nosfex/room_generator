@@ -23,14 +23,12 @@ fn create_hash(text: &str) -> String {
 
 fn main() {
 
-    let hash = create_hash("manuelneuersweeperkeeper");
-
-    // turn the hashed string into the correct length and type required by SeedableRng
+    let hash = create_hash("manuelneuerasdasweeperkeeper");
     let seed = array_ref!(hash.as_bytes(), 0, 32);
-
-    println!("Hello, world!");
     let mut rng: StdRng = SeedableRng::from_seed(*seed);
+
     let mut level = Level::new(48, 40);
     level.place_rooms(&mut rng);
+    level.place_corridors(&mut rng);
     println!("{}", level);
 }

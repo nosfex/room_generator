@@ -1,5 +1,8 @@
-use std::fmt;
-
+#[derive(Debug, Clone, Copy)]
+pub struct Point {
+    pub x: i32,
+    pub y: i32
+}
 #[derive(Clone, Copy)]
 pub struct Room {
     pub x: i32,
@@ -8,7 +11,7 @@ pub struct Room {
     pub y2: i32,
     pub width: i32,
     pub height: i32,
-    pub centre: (i32, i32)
+    pub centre: Point
 }
 
 impl Room {
@@ -20,7 +23,10 @@ impl Room {
             y2: y + height,
             width,
             height,
-            centre: (x + (width / 2), y + (height / 2))
+            centre: Point {
+                x: x + (width / 2),
+                y: y + (height / 2)
+            }
         }
     }
 
