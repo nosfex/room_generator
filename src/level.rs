@@ -79,28 +79,25 @@ impl Level {
 
            match rng.gen_range(0,2) {
                0 => {
-                   match room.centre.x <= other.centre.x {
-                       true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
-                       false => self.horz_corridor(other.centre.x, room.centre.x, other.centre.y)
-                   }
-                   match room.centre.y <= other.centre.y {
-                       true => self.vert_corridor(room.centre.y, other.centre.y, room.centre.x),
-                       false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x)
-                   }
-               }
-
-               _ => {
-                   match room.centre.y <= other.centre.y {
-                       true => self.vert_corridor(room.centre.y, other.centre.y, other.centre.x),
-                       false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x)
-                   }
-
-                   match room.centre.x <= other.centre.x {
-                       true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
-                       false => self.horz_corridor(other.centre.x, room.centre.x, room.centre.y)
-                   }
-
-               }
+                    match room.centre.x <= other.centre.x {
+                        true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
+                        false => self.horz_corridor(other.centre.x, room.centre.x, room.centre.y)
+                    }
+                    match room.centre.y <= other.centre.y {
+                        true => self.vert_corridor(room.centre.y, other.centre.y, other.centre.x),
+                        false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x)
+                    }
+                }
+                _ => {
+                    match room.centre.y <= other.centre.y {
+                        true => self.vert_corridor(room.centre.y, other.centre.y, other.centre.x),
+                        false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x)
+                    }
+                    match room.centre.x <= other.centre.x {
+                        true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
+                        false => self.horz_corridor(other.centre.x, room.centre.x, room.centre.y)
+                    }
+                }
            }
        }
    }

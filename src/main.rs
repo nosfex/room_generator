@@ -5,7 +5,9 @@ use sha2;
 // arrayref supplies a macro, so add annotation
 #[macro_use]
 extern crate arrayref;
-
+extern crate serde_derive;
+extern crate serde;
+extern crate serde_json;
 mod room;
 mod level;
 
