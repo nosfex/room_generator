@@ -1,9 +1,9 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Serialize)]
 pub struct Point {
     pub x: i32,
-    pub y: i32
+    pub y: i32,
 }
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize)]
 pub struct Room {
     pub x: i32,
     pub y: i32,
@@ -11,7 +11,7 @@ pub struct Room {
     pub y2: i32,
     pub width: i32,
     pub height: i32,
-    pub centre: Point
+    pub centre: Point,
 }
 
 impl Room {
@@ -25,8 +25,8 @@ impl Room {
             height,
             centre: Point {
                 x: x + (width / 2),
-                y: y + (height / 2)
-            }
+                y: y + (height / 2),
+            },
         }
     }
 
