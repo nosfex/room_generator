@@ -14,3 +14,8 @@ serde = ""
 serde_derive = ""
 serde_json = ""
 clap = ""
+cairo-rs = ""
+
+[dependencies.cairo-rs]
+features=["png"]
+version ="0.3"

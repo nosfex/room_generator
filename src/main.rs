@@ -9,7 +9,7 @@ extern crate arrayref;
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
-use clap;
+use clap::{App, Arg};
 mod level;
 mod room;
 
@@ -34,15 +34,13 @@ fn main() {
                 .short("t")
                 .long("text")
                 .takes_value(true)
-                .help("A hash string to use"),
-        )
+                .help("A hash string to use as seed"))
         .arg(
             Arg::with_name("seed")
                 .short("s")
                 .long("seed")
                 .takes_value(true)
-                .help("An existing seed. Must be 32 characters"),
-        )
+                .help("An existing seed. Must be 32 characters"))
         .get_matches();
     let hash = match std::env::args().nth(1) {
         Some(text) => create_hash(&text),
@@ -50,8 +48,7 @@ fn main() {
             &thread_rng()
                 .sample_iter(&Alphanumeric)
                 .take(32)
-                .collect::<String>(),
-        ),
+                .collect::<String>())
     };
     let seed = array_ref!(hash.as_bytes(), 0, 32);
     let mut rng: StdRng = SeedableRng::from_seed(*seed);
@@ -61,7 +58,7 @@ fn main() {
     level.place_corridors(&mut rng);
 
     let serialised = serde_json::to_string(&level).unwrap();
-
-    println!("{:?}", serialised);
     println!("{}", level);
+    println!("{:?}", serialised);
+
 }
