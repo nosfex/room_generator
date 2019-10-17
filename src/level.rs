@@ -1,6 +1,6 @@
 use crate::room::Room;
 use rand;
-use rand::prelude::*;
+
 use serde::{Serialize, Serializer};
 use std::fmt;
 #[derive(Serialize)]
@@ -9,7 +9,7 @@ pub struct Level {
     pub height: i32,
     pub board: Vec<Vec<Tile>>,
     pub tile_size: i32,
-    rooms: Vec<Room>,
+    pub rooms: Vec<Room>,
     hash: String,
 }
 
@@ -30,45 +30,7 @@ impl Level {
         }
     }
 
-    pub fn place_rooms(&mut self, rng: &mut StdRng) {
-        let max_rooms = 10;
-        let min_room_width = 4;
-        let max_room_width = 8;
-        let min_room_height = 5;
-        let max_room_height = 12;
-
-        for _ in 0..max_rooms {
-            let mut x = rng.gen_range(0, self.width);
-            let mut y = rng.gen_range(0, self.height);
-
-            let width = rng.gen_range(min_room_width, max_room_width);
-            let height = rng.gen_range(min_room_height, max_room_height);
-
-            if x + width > self.width {
-                x = self.width - width;
-            }
-
-            if y + height > self.height {
-                y = self.height - height;
-            }
-
-            let mut collides = false;
-            let room = Room::new(x, y, width, height);
-
-            for other_room in &self.rooms {
-                if room.intersects(&other_room) {
-                    collides = true;
-                    break;
-                }
-            }
-
-            if !collides {
-                self.add_room(&room);
-            }
-        }
-    }
-
-    fn add_room(&mut self, room: &Room) {
+    pub fn add_room(&mut self, room: &Room) {
         for row in 0..room.height {
             for col in 0..room.width {
                 let y = (room.y + row) as usize;
@@ -79,48 +41,6 @@ impl Level {
         }
 
         self.rooms.push(*room);
-    }
-
-    pub fn place_corridors(&mut self, rng: &mut StdRng) {
-        for i in 0..(self.rooms.len() - 1) {
-            let room = self.rooms[i];
-            let other = self.rooms[i + 1];
-
-            match rng.gen_range(0, 2) {
-                0 => {
-                    match room.centre.x <= other.centre.x {
-                        true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
-                        false => self.horz_corridor(other.centre.x, room.centre.x, room.centre.y),
-                    }
-                    match room.centre.y <= other.centre.y {
-                        true => self.vert_corridor(room.centre.y, other.centre.y, other.centre.x),
-                        false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x),
-                    }
-                }
-                _ => {
-                    match room.centre.y <= other.centre.y {
-                        true => self.vert_corridor(room.centre.y, other.centre.y, other.centre.x),
-                        false => self.vert_corridor(other.centre.y, room.centre.y, other.centre.x),
-                    }
-                    match room.centre.x <= other.centre.x {
-                        true => self.horz_corridor(room.centre.x, other.centre.x, room.centre.y),
-                        false => self.horz_corridor(other.centre.x, room.centre.x, room.centre.y),
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn horz_corridor(&mut self, start_x: i32, end_x: i32, y: i32) {
-        for col in start_x..end_x + 1 {
-            self.board[y as usize][col as usize] = Tile::Walkable;
-        }
-    }
-
-    pub fn vert_corridor(&mut self, start_y: i32, end_y: i32, x: i32) {
-        for row in start_y..end_y + 1 {
-            self.board[row as usize][x as usize] = Tile::Walkable;
-        }
     }
 }
 

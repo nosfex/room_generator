@@ -12,12 +12,15 @@ extern crate serde_json;
 use clap::{App, Arg};
 mod level;
 mod room;
+mod draw;
+mod roomscorridors;
 
 // use the sha functions
 use level::Level;
 use rand::prelude::*;
 use sha2::{Digest, Sha256};
-
+use draw::{ draw };
+use roomscorridors::{RoomsCorridors};
 // turn a string into a string 64 characters in length
 fn create_hash(text: &str) -> String {
     let mut hasher = Sha256::default();
@@ -34,31 +37,39 @@ fn main() {
                 .short("t")
                 .long("text")
                 .takes_value(true)
-                .help("A hash string to use as seed"))
+                .help("A hash string to use as seed"),
+        )
         .arg(
             Arg::with_name("seed")
                 .short("s")
                 .long("seed")
                 .takes_value(true)
-                .help("An existing seed. Must be 32 characters"))
+                .help("An existing seed. Must be 32 characters"),
+        )
         .get_matches();
-    let hash = match std::env::args().nth(1) {
-        Some(text) => create_hash(&text),
-        None => create_hash(
-            &thread_rng()
-                .sample_iter(&Alphanumeric)
-                .take(32)
-                .collect::<String>())
+    let seed: String = match matches.value_of("seed") {
+        Some(text) =>
+        {
+            if text.chars().count() < 32 {
+                panic!("Seed must be 32 characters long, use -t option to create new seed")
+            }
+            text.to_string()
+        },
+        None => {
+            match matches.value_of("text") {
+                Some(text) => create_hash(&text),
+                None => create_hash(&thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>())
+            }
+        }
     };
-    let seed = array_ref!(hash.as_bytes(), 0, 32);
-    let mut rng: StdRng = SeedableRng::from_seed(*seed);
 
-    let mut level = Level::new(48, 40, &hash);
-    level.place_rooms(&mut rng);
-    level.place_corridors(&mut rng);
+    let seed_u8 = array_ref!(seed.as_bytes(), 0, 32);
+    let mut rng: StdRng = SeedableRng::from_seed(*seed_u8);
 
+    let mut level = RoomsCorridors::new(48, 40, &seed, &mut rng);
     let serialised = serde_json::to_string(&level).unwrap();
     println!("{}", level);
     println!("{:?}", serialised);
 
+    draw(&level, "img", "level").unwrap();
 }
