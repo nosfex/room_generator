@@ -14,13 +14,14 @@ mod level;
 mod room;
 mod draw;
 mod roomscorridors;
-
+mod bsp;
 // use the sha functions
 use level::Level;
 use rand::prelude::*;
 use sha2::{Digest, Sha256};
 use draw::{ draw };
 use roomscorridors::{RoomsCorridors};
+use bsp::{BspLevel};
 // turn a string into a string 64 characters in length
 fn create_hash(text: &str) -> String {
     let mut hasher = Sha256::default();
@@ -66,7 +67,10 @@ fn main() {
     let seed_u8 = array_ref!(seed.as_bytes(), 0, 32);
     let mut rng: StdRng = SeedableRng::from_seed(*seed_u8);
 
-    let mut level = RoomsCorridors::new(48, 40, &seed, &mut rng);
+    //let mut level = RoomsCorridors::new(48, 40, &seed, &mut rng);
+
+    let level = BspLevel::new(48, 40, &seed, &mut rng);
+    println!("{}", level);
     let serialised = serde_json::to_string(&level).unwrap();
     println!("{}", level);
     println!("{:?}", serialised);
