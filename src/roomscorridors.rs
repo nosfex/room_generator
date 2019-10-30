@@ -44,7 +44,7 @@ impl RoomsCorridors {
             }
 
             let mut collides = false;
-            let room = Room::new(x, y, width, height);
+            let room = Room::new(x, y, width, height, None);
 
             for other_room in &self.level.rooms {
                 if room.intersects(&other_room) {
@@ -61,8 +61,8 @@ impl RoomsCorridors {
 
     fn place_corridors(&mut self, rng: &mut StdRng) {
        for i in 0..(self.level.rooms.len() - 1) {
-           let room = self.level.rooms[i];
-           let other = self.level.rooms[i + 1];
+           let room = self.level.rooms[i].clone();
+           let other = self.level.rooms[i + 1].clone();
 
            // randomly pick vert or horz
            match rng.gen_range(0, 2) {

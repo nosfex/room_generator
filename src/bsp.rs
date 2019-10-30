@@ -1,5 +1,5 @@
 use crate::room::Room;
-use crate::level::Level;
+use crate::level::{Level, Tile};
 use rand;
 // import crates
 use rand::distributions::Alphanumeric;
@@ -24,21 +24,51 @@ impl BspLevel {
     }
 
     fn place_rooms(&mut self, rng: &mut StdRng) {
+        let prebuilt = room![
+            [1, 1, 1, 1, 1, 1],
+            [0, 0, 0, 0, 1, 1],
+            [1, 1, 0, 0, 0, 0],
+            [1, 1, 1, 1, 1, 1],
+            [1, 1, 1, 1, 1, 1]
+        ];
+
+        let another = room![
+            [0, 0, 0, 1, 0, 0, 0],
+            [0, 0, 1, 1, 1, 0, 0],
+            [0, 1, 1, 1, 1, 1, 0],
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 0, 1, 0, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+            [1, 1, 0, 1, 0, 1, 1],
+            [1, 1, 1, 1, 1, 1, 1],
+            [0, 1, 1, 1, 1, 1, 0],
+            [0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 0, 1, 0, 0, 0]
+        ];
+
+        let other = room![
+            [1,1,1,1],
+            [1,0,0,1],
+            [1,0,0,1],
+            [1,1,1,1]
+        ];
+
+        let rooms = vec![prebuilt, another, other];
         let mut root = Leaf::new(0, 0, self.level.width, self.level.height, 8);
         root.generate(rng);
 
-        let mut rooms = vec![];
-        root.create_rooms(rng);
+        root.create_rooms(rng, &mut rooms.iter());
         for leaf in root.iter() {
             if leaf.is_leaf() {
                 if let Some(room) = leaf.get_room() {
                     self.level.add_room(&room)
                 }
             }
-        }
 
-        for corridor in &leaf.corridors {
-            self.level.add_room(&corridor);
+
+            for corridor in &leaf.corridors {
+                self.level.add_room(&corridor);
+            }
         }
     }
 }
@@ -84,7 +114,7 @@ impl<'a> LeafIterator<'a> {
 
 impl <'a> Iterator for LeafIterator<'a> {
     type Item = &'a Leaf;
-    fn next(&mut self) -> Options<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         let result = self.current_node.take();
         if let Some(rest) = self.right_nodes.pop() {
             self.add_subtrees(rest);
@@ -163,26 +193,31 @@ impl Leaf {
         }
     }
 
-    fn create_rooms(&mut self, rng: &mut StdRng) {
+    fn create_rooms<'a, I>(&mut self, rng: &mut StdRng, rooms:&mut I)
+        where I: Iterator<Item = &'a Vec<Vec<Tile>>> {
         if let Some(ref mut room) = self.left_child {
-            room.as_mut().create_rooms(rng);
+            room.as_mut().create_rooms(rng, rooms);
         };
 
         if let Some(ref mut room) = self.right_child {
-            room.as_mut().create_rooms(rng);
+            room.as_mut().create_rooms(rng, rooms);
         }
 
         let min_room_width = 4;
         let min_room_height = 3;
 
         if self.is_leaf() {
+            let room = rooms.next();
             let width = rng.gen_range(min_room_width, self.width);
             let height = rng.gen_range(min_room_height, self.height);
 
             let x = rng.gen_range(0, self.width - width);
             let y = rng.gen_range(0, self.height - height);
+            match room {
+                Some(prebuilt) => self.room = Some(Room::new(x + self.x, y + self.y, prebuilt[0].len() as i32,  prebuilt.len() as i32, Some(prebuilt.clone()))),
+                None => self.room = Some(Room::new(x + self.x, y + self.y, width, height, None))
+            }
 
-            self.room = Some(Room::new(x + self.x, y + self.y, width, height));
             //rooms.push(self.room.unwrap());
         }
 
@@ -193,7 +228,7 @@ impl Leaf {
 
     fn get_room(&self) -> Option<Room> {
         if self.is_leaf() {
-            return self.room;
+            return self.room.clone();
         }
 
         let mut left_room : Option<Room> = None;
@@ -214,7 +249,7 @@ impl Leaf {
         }
     }
 
-    fn iter(&self) -> leafIterator {
+    fn iter(&self) -> LeafIterator {
         LeafIterator::new(&self)
     }
 }
@@ -222,7 +257,7 @@ impl Leaf {
 fn create_corridors(rng: &mut StdRng, left: &mut Box<Leaf>, right: &mut Box<Leaf>) {
     if let(Some(left_room), Some(right_room)) = (left.get_room(), right.get_room()) {
         let left_point = (rng.gen_range(left_room.x, left_room.x + left_room.width), rng.gen_range(left_room.y, left_room.y + left_room.height));
-        let right_point = (rng.gen_range(right_room.x, right_room.x + right_room.width), rng.gen_range(right_room.y, right_room.y + right_room.width));
+        let right_point = (rng.gen_range(right_room.x, right_room.x + right_room.width), rng.gen_range(right_room.y, right_room.y + right_room.height));
 
         match rng.gen_range(0, 2) {
             0 => {
@@ -250,9 +285,9 @@ fn create_corridors(rng: &mut StdRng, left: &mut Box<Leaf>, right: &mut Box<Leaf
 }
 
 fn horz_corridor(start_x: i32, start_y: i32, end_x: i32) -> Room {
-    Room::new(start_x, start_y, (end_x - start_x) + 1, 1)
+    Room::new(start_x, start_y, (end_x - start_x) + 1, 1, None)
 }
 
 fn vert_corridor(start_x: i32, start_y: i32, end_y: i32) -> Room {
-    Room::new(start_x, start_y, 1, (end_y - start_y) + 1)
+    Room::new(start_x, start_y, 1, (end_y - start_y), None)
 }
