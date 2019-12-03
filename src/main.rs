@@ -16,6 +16,7 @@ mod room;
 mod draw;
 mod roomscorridors;
 mod bsp;
+mod iced_defines;
 // use the sha functions
 use level::Level;
 use rand::prelude::*;
@@ -23,6 +24,11 @@ use sha2::{Digest, Sha256};
 use draw::{ draw };
 use roomscorridors::{RoomsCorridors};
 use bsp::{BspLevel};
+use iced_defines::{IcedSandbox};
+use iced::{
+    Settings
+};
+use iced::Sandbox;
 // turn a string into a string 64 characters in length
 fn create_hash(text: &str) -> String {
     let mut hasher = Sha256::default();
@@ -102,4 +108,6 @@ fn main() {
     println!("{:?}", serialised);
 
     draw(&level, "img", "level").unwrap();
+
+    IcedSandbox::run(Settings::default())
 }
