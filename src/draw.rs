@@ -27,11 +27,11 @@ fn draw_tiles(context: &Context, board: &Vec<Vec<Tile>>, scale: f64) {
 
                 Tile::Walkable => ({
 
-                    let colScale = col as f64 * scale;
-                    let rowScale = row as f64 * scale;
-                    let colScaleDelta = col as f64 * scale + scale;
-                    let rowScaleDelta = row as f64 * scale + scale;
-                    draw_tile(context, colScale, rowScale, colScaleDelta, rowScaleDelta);
+                    let col_scale = col as f64 * scale;
+                    let row_scale = row as f64 * scale;
+                    let col_scale_delta = col as f64 * scale + scale;
+                    let row_scale_delta = row as f64 * scale + scale;
+                    draw_tile(context, col_scale, row_scale, col_scale_delta, row_scale_delta);
                 }),
                 _ => ()
             }

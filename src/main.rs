@@ -109,5 +109,8 @@ fn main() {
 
     draw(&level, "img", "level").unwrap();
 
-    IcedSandbox::run(Settings::default())
+    let ice_sandbox = IcedSandbox::new();
+    ice_sandbox.run(ice_sandbox, Settings::default());
+    ice_sandbox.iced_room_gen.set_from_console(board_width, board_height, seed, rng);
+
 }

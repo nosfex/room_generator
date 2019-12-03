@@ -13,7 +13,8 @@ pub struct IcedSandbox {
     value: i32,
     decrement_button : button::State,
     increment_button : button::State,
-    iced_room_gen: IcedRoomGenerator,
+    new_map_button: button::State,
+    pub iced_room_gen: IcedRoomGenerator,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -24,7 +25,7 @@ pub enum Message {
 }
 
 trait RoomGeneratorApplication {
-    const val: [u8;32];
+    const VAL: [u8;32];
     fn new() -> Self;
     fn set_from_console(&mut self, board_width: i32, board_height: i32, seed: String, rng: StdRng);
 }
@@ -32,13 +33,13 @@ trait RoomGeneratorApplication {
 
 impl RoomGeneratorApplication for IcedRoomGenerator
 {
-    const val : [u8;32] = [1;32];
+    const VAL : [u8;32] = [1;32];
     fn new() -> IcedRoomGenerator {
         IcedRoomGenerator {
             board_width: 0,
             board_height: 0,
             seed: 0.to_string(),
-            rng: SeedableRng::from_seed(Self::val)
+            rng: SeedableRng::from_seed(Self::VAL)
         }
     }
     fn set_from_console(&mut self, board_width: i32, board_height: i32, seed: String, rng: StdRng) {
@@ -56,6 +57,7 @@ impl Sandbox for IcedSandbox {
             value : 0,
             decrement_button: button::State::new(),
             increment_button: button::State::new(),
+            new_map_button: button::State::new(),
             iced_room_gen: IcedRoomGenerator::new()
         }
     }
@@ -90,6 +92,10 @@ impl Sandbox for IcedSandbox {
             .push(
                 Button::new(&mut self.decrement_button, Text::new("Decrement"))
                     .on_press(Message::DecrementPressed),
+            )
+            .push(
+                Button::new(&mut self.new_map_button, Text::new("New Map"))
+                    .on_press(Message::NewMapPressed),
             )
             .into()
         //let mut controls = Row::new();
