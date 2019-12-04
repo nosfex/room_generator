@@ -97,7 +97,7 @@ fn main() {
     let board_width = 48;
     let board_height = 40;
 
-    let level = match method {
+    /*let level = match method {
         Algorithm::Rooms => RoomsCorridors::new(board_width, board_height, &seed, &mut rng),
         Algorithm::Bsp => BspLevel::new(board_width, board_height, &seed, &mut rng)
     };
@@ -107,10 +107,9 @@ fn main() {
     println!("{}", level);
     println!("{:?}", serialised);
 
-    draw(&level, "img", "level").unwrap();
+    draw(&level, "img", "level").unwrap();*/
 
-    let ice_sandbox = IcedSandbox::new();
-    ice_sandbox.run(ice_sandbox, Settings::default());
-    ice_sandbox.iced_room_gen.set_from_console(board_width, board_height, seed, rng);
+    let ice_sandbox = IcedSandbox::run(Settings::default());
+
 
 }

@@ -1,7 +1,12 @@
-use iced::{button, Button, Column, Element, Sandbox, Settings, Text};
+use iced::{button, Button, Column, Element, Sandbox, Container, Settings, Text, Image};
 use rand::{rngs::StdRng, SeedableRng};
 use crate::roomscorridors::RoomsCorridors;
-
+use crate::bsp::BspLevel;
+use rand::distributions::Alphanumeric;
+use rand::prelude::*;
+use sha2::{Digest, Sha256};
+use rand;
+use crate::draw::draw;
 pub struct IcedRoomGenerator {
     board_width: i32,
     board_height: i32,
@@ -26,6 +31,7 @@ pub enum Message {
 
 trait RoomGeneratorApplication {
     const VAL: [u8;32];
+
     fn new() -> Self;
     fn set_from_console(&mut self, board_width: i32, board_height: i32, seed: String, rng: StdRng);
 }
@@ -33,11 +39,12 @@ trait RoomGeneratorApplication {
 
 impl RoomGeneratorApplication for IcedRoomGenerator
 {
-    const VAL : [u8;32] = [1;32];
+    const VAL : [u8;32] = [0;32];
+
     fn new() -> IcedRoomGenerator {
         IcedRoomGenerator {
-            board_width: 0,
-            board_height: 0,
+            board_width: 48,
+            board_height: 40,
             seed: 0.to_string(),
             rng: SeedableRng::from_seed(Self::VAL)
         }
@@ -49,6 +56,12 @@ impl RoomGeneratorApplication for IcedRoomGenerator
         self.rng = rng;
     }
 
+}
+
+fn create_hash(text: &str) -> String {
+    let mut hasher = Sha256::default();
+    hasher.input(text.as_bytes());
+    format!("{:x}", hasher.result())
 }
 impl Sandbox for IcedSandbox {
     type Message = Message;
@@ -75,7 +88,14 @@ impl Sandbox for IcedSandbox {
                 self.value-=1;
             }
             Message::NewMapPressed => {
-                RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &self.iced_room_gen.seed, &mut self.iced_room_gen.rng);
+                let seed = create_hash(&thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>());
+                let seed_u8 = array_ref!( seed.as_bytes(), 0, 32);
+                let mut rng = SeedableRng::from_seed(  *seed_u8);
+                let level = BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
+
+                println!("{}", level);
+                self.value += 1;
+                draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
                 ()
             }
         }
@@ -97,6 +117,7 @@ impl Sandbox for IcedSandbox {
                 Button::new(&mut self.new_map_button, Text::new("New Map"))
                     .on_press(Message::NewMapPressed),
             )
+            .push(Container::new(Image::new(format!("img/level{:x}.png", self.value))))
             .into()
         //let mut controls = Row::new();
     }
