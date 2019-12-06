@@ -16,9 +16,11 @@ pub struct IcedRoomGenerator {
 
 pub struct IcedSandbox {
     value: i32,
-    decrement_button : button::State,
-    increment_button : button::State,
+    decrement_button: button::State,
+    increment_button: button::State,
     new_map_button: button::State,
+    algo_toggle_button: button::State,
+    current_algorithm: IcedAlgorithm,
     pub iced_room_gen: IcedRoomGenerator,
 }
 
@@ -27,6 +29,7 @@ pub enum Message {
     IncrementPressed,
     DecrementPressed,
     NewMapPressed,
+    AlgoSelection,
 }
 
 trait RoomGeneratorApplication {
@@ -58,6 +61,11 @@ impl RoomGeneratorApplication for IcedRoomGenerator
 
 }
 
+enum IcedAlgorithm {
+    Bsp,
+    Rooms
+}
+
 fn create_hash(text: &str) -> String {
     let mut hasher = Sha256::default();
     hasher.input(text.as_bytes());
@@ -70,13 +78,15 @@ impl Sandbox for IcedSandbox {
             value : 0,
             decrement_button: button::State::new(),
             increment_button: button::State::new(),
+            algo_toggle_button : button::State::new(),
             new_map_button: button::State::new(),
-            iced_room_gen: IcedRoomGenerator::new()
+            iced_room_gen: IcedRoomGenerator::new(),
+            current_algorithm: IcedAlgorithm::Bsp
         }
     }
 
     fn title(&self) -> String {
-        format!("{} - Iced", "Cocaine")
+        format!("{} - Iced", "RoomGen")
     }
 
     fn update(&mut self, event: Message) {
@@ -91,12 +101,32 @@ impl Sandbox for IcedSandbox {
                 let seed = create_hash(&thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>());
                 let seed_u8 = array_ref!( seed.as_bytes(), 0, 32);
                 let mut rng = SeedableRng::from_seed(  *seed_u8);
-                let level = BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
+                match self.current_algorithm {
+                    IcedAlgorithm::Bsp =>
+                    {
+                        let level = BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
 
-                println!("{}", level);
-                self.value += 1;
-                draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                        println!("{}", level);
+                        self.value += 1;
+                        draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                    },
+                    IcedAlgorithm::Rooms => {
+                        let level = RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
+
+                        println!("{}", level);
+                        self.value += 1;
+                        draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                    }
+
+                };
                 ()
+            }
+            Message::AlgoSelection => {
+                let toggle = match self.current_algorithm {
+                    IcedAlgorithm::Bsp => IcedAlgorithm::Rooms,
+                    IcedAlgorithm::Rooms => IcedAlgorithm::Bsp,
+                };
+                self.current_algorithm = toggle;
             }
         }
     }
@@ -112,6 +142,10 @@ impl Sandbox for IcedSandbox {
             .push(
                 Button::new(&mut self.decrement_button, Text::new("Decrement"))
                     .on_press(Message::DecrementPressed),
+            )
+            .push(
+                Button::new(&mut self.algo_toggle_button, Text::new("Algo toggle"))
+                    .on_press(Message::AlgoSelection),
             )
             .push(
                 Button::new(&mut self.new_map_button, Text::new("New Map"))

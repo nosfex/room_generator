@@ -32,8 +32,8 @@ impl RoomsCorridors {
             let mut x = rng.gen_range(0, self.level.width);
             let mut y = rng.gen_range(0, self.level.height);
 
-            let mut width = rng.gen_range(min_room_width, max_room_width);
-            let mut height = rng.gen_range(min_room_height, max_room_height);
+            let width = rng.gen_range(min_room_width, max_room_width);
+            let height = rng.gen_range(min_room_height, max_room_height);
 
             if x + width > self.level.width {
                 x = self.level.width - width;
