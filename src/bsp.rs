@@ -2,7 +2,6 @@ use crate::room::Room;
 use crate::level::{Level, Tile};
 use rand;
 // import crates
-use rand::distributions::Alphanumeric;
 use rand::prelude::*;
 
 
@@ -289,5 +288,5 @@ fn horz_corridor(start_x: i32, start_y: i32, end_x: i32) -> Room {
 }
 
 fn vert_corridor(start_x: i32, start_y: i32, end_y: i32) -> Room {
-    Room::new(start_x, start_y, 1, (end_y - start_y), None)
+    Room::new(start_x, start_y, 1, end_y - start_y, None)
 }

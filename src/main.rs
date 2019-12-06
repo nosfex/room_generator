@@ -1,7 +1,4 @@
-use rand;
 // import crates
-use rand::distributions::Alphanumeric;
-use sha2;
 // arrayref supplies a macro, so add annotation
 #[macro_use]
 extern crate arrayref;
@@ -18,18 +15,14 @@ mod roomscorridors;
 mod bsp;
 mod iced_defines;
 // use the sha functions
-use level::Level;
-use rand::prelude::*;
-use sha2::{Digest, Sha256};
-use draw::{ draw };
-use roomscorridors::{RoomsCorridors};
-use bsp::{BspLevel};
+
 use iced_defines::{IcedSandbox};
 use iced::{
     Settings
 };
 use iced::Sandbox;
 // turn a string into a string 64 characters in length
+/*
 fn create_hash(text: &str) -> String {
     let mut hasher = Sha256::default();
     hasher.input(text.as_bytes());
@@ -40,7 +33,7 @@ enum Algorithm {
     Bsp,
     Rooms
 }
-
+*/
 fn main() {
     let matches = App::new("Dungeon")
         .version("1.0")
@@ -69,7 +62,7 @@ fn main() {
                 .help("The type of proc algo to use"))
         .get_matches();
 
-    let seed: String = match matches.value_of("seed") {
+    /*let seed: String = match matches.value_of("seed") {
         Some(text) =>
         {
             if text.chars().count() < 32 {
@@ -84,8 +77,8 @@ fn main() {
             }
         }
     };
-
-    let seed_u8 = array_ref!(seed.as_bytes(), 0, 32);
+*/
+    /*let seed_u8 = array_ref!(seed.as_bytes(), 0, 32);
     let mut rng: StdRng = SeedableRng::from_seed(*seed_u8);
 
     let method = match matches.value_of("algo").expect("Default algorithm not set") {
@@ -93,10 +86,10 @@ fn main() {
         "rooms" => Algorithm::Rooms,
         _ => unreachable![]
     };
-
+    
     let board_width = 48;
     let board_height = 40;
-
+*/
     /*let level = match method {
         Algorithm::Rooms => RoomsCorridors::new(board_width, board_height, &seed, &mut rng),
         Algorithm::Bsp => BspLevel::new(board_width, board_height, &seed, &mut rng)
@@ -109,7 +102,5 @@ fn main() {
 
     draw(&level, "img", "level").unwrap();*/
 
-    let ice_sandbox = IcedSandbox::run(Settings::default());
-
-
+    IcedSandbox::run(Settings::default());
 }

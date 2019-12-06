@@ -1,4 +1,5 @@
-use iced::{button, Button, Column, Element, Sandbox, Container, Settings, Text, Image};
+use iced::{button, Button, Column, Row,
+     Element, Sandbox, Container, Settings, Text, Image};
 use rand::{rngs::StdRng, SeedableRng};
 use crate::roomscorridors::RoomsCorridors;
 use crate::bsp::BspLevel;
@@ -16,6 +17,7 @@ pub struct IcedRoomGenerator {
 
 pub struct IcedSandbox {
     value: i32,
+    current_map: i32,
     decrement_button: button::State,
     increment_button: button::State,
     new_map_button: button::State,
@@ -76,6 +78,7 @@ impl Sandbox for IcedSandbox {
     fn new() -> Self {
         IcedSandbox {
             value : 0,
+            current_map: 0,
             decrement_button: button::State::new(),
             increment_button: button::State::new(),
             algo_toggle_button : button::State::new(),
@@ -92,10 +95,14 @@ impl Sandbox for IcedSandbox {
     fn update(&mut self, event: Message) {
         match event {
             Message::IncrementPressed => {
-                self.value+=1;
+                self.current_map+=1;
             }
             Message::DecrementPressed => {
-                self.value-=1;
+
+                if self.current_map > 0
+                {
+                    self.current_map-=1;
+                }
             }
             Message::NewMapPressed => {
                 let seed = create_hash(&thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>());
@@ -107,26 +114,27 @@ impl Sandbox for IcedSandbox {
                         let level = BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
 
                         println!("{}", level);
-                        self.value += 1;
+                       
                         draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                        self.value += 1;
                     },
                     IcedAlgorithm::Rooms => {
                         let level = RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
 
                         println!("{}", level);
-                        self.value += 1;
+                       
                         draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                        self.value += 1;
                     }
 
                 };
                 ()
             }
             Message::AlgoSelection => {
-                let toggle = match self.current_algorithm {
+                self.current_algorithm = match self.current_algorithm {
                     IcedAlgorithm::Bsp => IcedAlgorithm::Rooms,
                     IcedAlgorithm::Rooms => IcedAlgorithm::Bsp,
                 };
-                self.current_algorithm = toggle;
             }
         }
     }
@@ -134,15 +142,16 @@ impl Sandbox for IcedSandbox {
     fn view(&mut self) -> Element<Message> {
 
         Column::new().padding(20)
-            .push(
-                Button::new(&mut self.increment_button, Text::new("Increment"))
-                    .on_press(Message::IncrementPressed),
-            )
-            .push(Text::new(self.value.to_string()).size(50))
-            .push(
-                Button::new(&mut self.decrement_button, Text::new("Decrement"))
-                    .on_press(Message::DecrementPressed),
-            )
+            .push(Row::new().padding(10)
+                .push(
+                    Button::new(&mut self.decrement_button, Text::new("Previous Map"))
+                        .on_press(Message::DecrementPressed)
+                )
+                .push(Text::new(self.current_map.to_string()).size(20))
+                .push(
+                    Button::new(&mut self.increment_button, Text::new("Next Map"))
+                        .on_press(Message::IncrementPressed))
+            )   
             .push(
                 Button::new(&mut self.algo_toggle_button, Text::new("Algo toggle"))
                     .on_press(Message::AlgoSelection),
@@ -151,8 +160,7 @@ impl Sandbox for IcedSandbox {
                 Button::new(&mut self.new_map_button, Text::new("New Map"))
                     .on_press(Message::NewMapPressed),
             )
-            .push(Container::new(Image::new(format!("img/level{:x}.png", self.value))))
+            .push(Container::new(Image::new(format!("img/level{:x}.png", self.current_map))))
             .into()
-        //let mut controls = Row::new();
     }
 }

@@ -1,6 +1,4 @@
 use crate::room::Room;
-use rand;
-
 use serde::{Serialize, Serializer};
 use std::fmt;
 #[derive(Serialize)]
