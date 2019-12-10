@@ -23,7 +23,9 @@ pub struct IcedSandbox {
     new_map_button: button::State,
     algo_toggle_button: button::State,
     current_algorithm: IcedAlgorithm,
+    current_image: String,
     pub iced_room_gen: IcedRoomGenerator,
+    force_clear: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -84,7 +86,9 @@ impl Sandbox for IcedSandbox {
             algo_toggle_button : button::State::new(),
             new_map_button: button::State::new(),
             iced_room_gen: IcedRoomGenerator::new(),
-            current_algorithm: IcedAlgorithm::Bsp
+            current_algorithm: IcedAlgorithm::Bsp,
+            current_image: format!("img/level{}.png", 0),
+            force_clear: false,
         }
     }
 
@@ -96,12 +100,14 @@ impl Sandbox for IcedSandbox {
         match event {
             Message::IncrementPressed => {
                 self.current_map+=1;
+                self.current_image = format!("img/level{}.png", self.current_map);
             }
             Message::DecrementPressed => {
 
                 if self.current_map > 0
                 {
                     self.current_map-=1;
+                    self.current_image = format!("img/level{}.png", self.current_map);
                 }
             }
             Message::NewMapPressed => {
@@ -115,16 +121,21 @@ impl Sandbox for IcedSandbox {
 
                         println!("{}", level);
                        
-                        draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                        draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
+                        self.current_image = format!("img/level{}.png", self.value);
                         self.value += 1;
+                        self.force_clear = true;
+                     
                     },
                     IcedAlgorithm::Rooms => {
                         let level = RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
 
                         println!("{}", level);
                        
-                        draw(&level, "img", &format!("level{:x}", self.value)[..]).unwrap();
+                        draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
+                        self.current_image = format!("img/level{}.png", self.value);
                         self.value += 1;
+                        self.force_clear = true;
                     }
 
                 };
@@ -140,7 +151,8 @@ impl Sandbox for IcedSandbox {
     }
 
     fn view(&mut self) -> Element<Message> {
-
+        //let image = self.current_image;
+        println!("{}" ,self.current_image.clone());
         Column::new().padding(20)
             .push(Row::new().padding(10)
                 .push(
@@ -160,7 +172,8 @@ impl Sandbox for IcedSandbox {
                 Button::new(&mut self.new_map_button, Text::new("New Map"))
                     .on_press(Message::NewMapPressed),
             )
-            .push(Container::new(Image::new(format!("img/level{:x}.png", self.current_map))))
+            .push(Image::new(self.current_image.clone()))
             .into()
+        
     }
 }
