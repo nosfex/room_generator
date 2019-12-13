@@ -8,6 +8,9 @@ use rand::prelude::*;
 use sha2::{Digest, Sha256};
 use rand;
 use crate::draw::draw;
+use std::fs::File;
+use crate::level::Level;
+
 pub struct IcedRoomGenerator {
     board_width: i32,
     board_height: i32,
@@ -28,6 +31,11 @@ pub struct IcedSandbox {
     force_clear: bool,
 }
 
+pub struct AlgoSelectionState {
+    current_algorithm : IcedAlgorithm,
+    current_text : String
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     IncrementPressed,
@@ -40,7 +48,10 @@ trait RoomGeneratorApplication {
     const VAL: [u8;32];
 
     fn new() -> Self;
-    fn set_from_console(&mut self, board_width: i32, board_height: i32, seed: String, rng: StdRng);
+}
+
+trait SaveLevelSandbox {
+    fn save_level(&mut self, level :Level);
 }
 
 
@@ -56,13 +67,23 @@ impl RoomGeneratorApplication for IcedRoomGenerator
             rng: SeedableRng::from_seed(Self::VAL)
         }
     }
-    fn set_from_console(&mut self, board_width: i32, board_height: i32, seed: String, rng: StdRng) {
-        self.board_width = board_width;
-        self.board_height = board_height;
-        self.seed = seed;
-        self.rng = rng;
-    }
+   
+}
 
+impl SaveLevelSandbox for IcedSandbox {
+    fn save_level(&mut self, level :Level) {
+        
+        println!("{}", level);
+        let serialised = serde_json::to_string(&level).unwrap().replace("\n", "");
+        
+        draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
+        let data_name = format!("json/level_data{}.json", self.value);
+        let file = File::create( data_name ).unwrap();
+        serde_json::to_writer(file, &serialised).unwrap();
+        self.current_image = format!("img/level{}.png", self.value);
+        self.value += 1;
+        self.force_clear = true;
+    }
 }
 
 enum IcedAlgorithm {
@@ -114,31 +135,16 @@ impl Sandbox for IcedSandbox {
                 let seed = create_hash(&thread_rng().sample_iter(&Alphanumeric).take(32).collect::<String>());
                 let seed_u8 = array_ref!( seed.as_bytes(), 0, 32);
                 let mut rng = SeedableRng::from_seed(  *seed_u8);
-                match self.current_algorithm {
+                let level = match self.current_algorithm {
                     IcedAlgorithm::Bsp =>
                     {
-                        let level = BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
-
-                        println!("{}", level);
-                       
-                        draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
-                        self.current_image = format!("img/level{}.png", self.value);
-                        self.value += 1;
-                        self.force_clear = true;
-                     
+                        BspLevel::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng)
                     },
                     IcedAlgorithm::Rooms => {
-                        let level = RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng);
-
-                        println!("{}", level);
-                       
-                        draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
-                        self.current_image = format!("img/level{}.png", self.value);
-                        self.value += 1;
-                        self.force_clear = true;
+                        RoomsCorridors::new(self.iced_room_gen.board_width, self.iced_room_gen.board_height, &seed, &mut rng)
                     }
-
                 };
+                self.save_level(level);
                 ()
             }
             Message::AlgoSelection => {
@@ -150,9 +156,9 @@ impl Sandbox for IcedSandbox {
         }
     }
 
+    
     fn view(&mut self) -> Element<Message> {
         //let image = self.current_image;
-        println!("{}" ,self.current_image.clone());
         Column::new().padding(20)
             .push(Row::new().padding(10)
                 .push(
