@@ -10,6 +10,12 @@ use rand;
 use crate::draw::draw;
 use std::fs::File;
 use crate::level::Level;
+use regex::Regex;
+use std::process::Command;
+use sedregex::{find_and_replace, ReplaceCommand};
+use duct::cmd;
+use std::io::prelude::*;
+use std::io::BufReader;
 
 pub struct IcedRoomGenerator {
     board_width: i32,
@@ -73,16 +79,41 @@ impl RoomGeneratorApplication for IcedRoomGenerator
 impl SaveLevelSandbox for IcedSandbox {
     fn save_level(&mut self, level :Level) {
         
-        println!("{}", level);
-        let serialised = serde_json::to_string(&level).unwrap().replace("\n", "");
-        
+       
+        let serialised = serde_json::to_string(&level).unwrap();
+        let out = format!("{}", serialised);
+
+      
+        let repl =  find_and_replace(&out, &["s/\\/ /ig"]).unwrap();
+       
+        let var = String::from(&repl[..]);
         draw(&level, "img", &format!("level{}", self.value)[..]).unwrap();
         let data_name = format!("json/level_data{}.json", self.value);
         let file = File::create( data_name ).unwrap();
-        serde_json::to_writer(file, &serialised).unwrap();
+        let mut bytes_vec = var.as_bytes().to_vec();
+        // let mut i = 0;
+
+        // while i < bytes_vec.len() {
+        //     if bytes_vec[i] == 34 {
+        //         bytes_vec.remove(i);
+        //         bytes_vec.insert(i, r#"""#.as_bytes().to_vec()[0]);
+        //     }
+        //     i+=1;
+        // }s
+        let utf8 = String::from_utf8(bytes_vec).unwrap();
+        serde_json::to_writer(file, &utf8).unwrap();        
         self.current_image = format!("img/level{}.png", self.value);
+
+        Command::new("./clean_file.sh").arg(format!("json/level_data{}.json", self.value) );
+      //  let big_cmd = cmd!("bash", "clean_file.sh", format!("level_data{}.json", self.value) );
+      //  powershell -Command "(gc myFile.txt) -replace 'foo', 'bar' | Out-File -encoding ASCII myFile.txt"
+        let big_cmd = cmd!("powershell", "shell.ps1" );
+        let reader = big_cmd.stderr_to_stdout().reader();
+        
+        println!("{:?}", reader);
         self.value += 1;
         self.force_clear = true;
+  
     }
 }
 

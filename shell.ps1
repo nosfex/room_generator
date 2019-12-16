@@ -1,0 +1,1 @@
+(gc json/level_data1.json) -replace '\\', '' | Out-File json/level_data1.json -encoding ASCII

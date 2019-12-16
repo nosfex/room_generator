@@ -6,6 +6,10 @@ extern crate arrayref;
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+extern crate regex;
+extern crate sedregex;
+#[macro_use]
+extern crate duct;
 use clap::{App, Arg};
 mod level;
 #[macro_use]
