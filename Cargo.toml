@@ -8,9 +8,7 @@ edition = "2018"
 
 [dependencies]
 rand = {git="https://github.com/rust-random/rand.git"}
-regex = ""
-sedregex = ""
-duct = ""
+
 sha2 = "0.7.1"
 arrayref = "0.3.4"
 serde = ""
